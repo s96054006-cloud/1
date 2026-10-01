@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공유 계정 안내</title>
+<style>
+  :root{
+    --bg: #F5F6F8;
+    --panel: #FFFFFF;
+    --ink: #1C2430;
+    --ink-soft: #5B6472;
+    --line: #E3E6EA;
+    --accent: #2F6F6B;
+    --accent-soft: #E7F1EF;
+    --amber: #C98A3D;
+    --mono: 'SFMono-Regular', 'JetBrains Mono', Consolas, Menlo, monospace;
+    --sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding: 48px 20px;
+  }
+  .wrap{ width:100%; max-width: 640px; }
+  header{ margin-bottom: 32px; }
+  .eyebrow{
+    font-size:12px; letter-spacing:0.12em; text-transform:uppercase;
+    color: var(--accent); font-weight:700; margin-bottom:8px;
+  }
+  h1{ font-size:26px; margin:0 0 8px; letter-spacing:-0.01em; }
+  .sub{ color: var(--ink-soft); font-size:14px; line-height:1.6; margin:0; }
+
+  .accounts{
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+
+  .account-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+  }
+
+  .account-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom: 6px;
+  }
+  .account-name{ font-size:17px; font-weight:700; }
+  .account-depts{
+    font-size:12px;
+    color: var(--accent);
+    font-weight:600;
+    background: var(--accent-soft);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .field{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+  .field-label{
+    font-size:11px; color: var(--ink-soft); letter-spacing:0.05em; text-transform:uppercase;
+    width:56px; flex-shrink:0;
+  }
+  .field-value{
+    font-family: var(--mono);
+    font-size:15px;
+    letter-spacing:0.04em;
+    flex:1;
+    word-break: break-all;
+    transition: filter .15s ease;
+  }
+  .copy-btn{
+    flex-shrink:0;
+    border:none;
+    background: var(--accent);
+    color:#fff;
+    font-family: var(--sans);
+    font-size:12px;
+    font-weight:600;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .copy-btn:hover{ background:#255a56; }
+  .copy-btn.copied{ background: var(--amber); }
+
+  footer{
+    margin-top: 28px;
+    font-size:12px;
+    color: var(--ink-soft);
+    text-align:center;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Shared Accounts</div>
+    <h1>공유 계정 안내</h1>
+    <p class="sub">각 계정 박스에서 사용 부서를 확인하고, 아이디와 비밀번호를 복사할 수 있습니다. 비밀번호는 평소 별표로 가려져 있으며, 복사 버튼을 누르면 잠시 표시됩니다.</p>
+  </header>
+
+  <div class="accounts" id="accounts"></div>
+
+  <footer>비밀번호는 복사 시 약 2초간 표시된 뒤 다시 가려집니다.</footer>
+</div>
+
+<script>
+  const accounts = [
+    { name: "계정A", id: "abc123", pw: "1234", depts: ["영업팀", "마케팅팀"] },
+    { name: "계정B", id: "def456", pw: "1234", depts: ["개발팀"] },
+    { name: "계정C", id: "ghi789", pw: "1234", depts: ["디자인팀", "총무팀"] }
+  ];
+
+  const wrap = document.getElementById('accounts');
+
+  accounts.forEach(acc => {
+    const card = document.createElement('div');
+    card.className = 'account-card';
+    card.innerHTML = `
+      <div class="account-head">
+        <div class="account-name">${acc.name}</div>
+        <div class="account-depts">${acc.depts.join(' · ')}</div>
+      </div>
+      <div class="field">
+        <span class="field-label">ID</span>
+        <span class="field-value" data-real="${acc.id}">${acc.id}</span>
+        <button class="copy-btn" data-type="id">복사</button>
+      </div>
+      <div class="field">
+        <span class="field-label">PW</span>
+        <span class="field-value" data-real="${acc.pw}">${'•'.repeat(acc.pw.length)}</span>
+        <button class="copy-btn" data-type="pw">복사</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+
+    const idField = card.querySelector('[data-type="id"]');
+    const pwField = card.querySelector('[data-type="pw"]');
+    const pwValueEl = card.querySelectorAll('.field-value')[1];
+
+    idField.addEventListener('click', () => {
+      const val = idField.previousElementSibling.dataset.real;
+      copyText(val, idField);
+    });
+
+    pwField.addEventListener('click', () => {
+      const val = pwValueEl.dataset.real;
+      copyText(val, pwField);
+      pwValueEl.textContent = val;
+      clearTimeout(pwValueEl._hideTimer);
+      pwValueEl._hideTimer = setTimeout(() => {
+        pwValueEl.textContent = '•'.repeat(val.length);
+      }, 2000);
+    });
+  });
+
+  function copyText(text, btnEl){
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btnEl.textContent;
+      btnEl.textContent = '복사됨';
+      btnEl.classList.add('copied');
+      setTimeout(() => {
+        btnEl.textContent = original;
+        btnEl.classList.remove('copied');
+      }, 1200);
+    });
+  }
+</script>
+</body>
+</html>
